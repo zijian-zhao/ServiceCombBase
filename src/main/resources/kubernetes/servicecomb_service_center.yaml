@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicecomb-sc-svc
+  labels:
+    name: servicecomb-sc-svc
+spec:
+  type: NodePort
+  ports:
+    - port: 30100
+      protocol: TCP
+      targetPort: 30100
+      name: http
+      nodePort: 30100
+  selector:
+    name: servicecomb-sc-pod
+
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: servicecomb-sc-rc
+  labels:
+    name: servicecomb-sc-rc
+spec:
+  replicas: 1
+  selector:
+    name: servicecomb-sc-pod
+  template:
+    metadata:
+      labels:
+        name: servicecomb-sc-pod
+    spec:
+      containers:
+        - name: service-center
+          image: service-center
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 30100

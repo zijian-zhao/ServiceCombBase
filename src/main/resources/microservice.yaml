@@ -1,0 +1,88 @@
+APPLICATION_ID: start.servicecomb.io
+service_description:
+  name: ServiceCombBase
+  version: 0.0.1
+  environment: development
+servicecomb:
+  handler:
+    chain:
+      Provider:
+        default: qps-flowcontrol-provider,bizkeeper-provider,tracing-provider
+      Consumer:
+        default: bizkeeper-consumer,tracing-consumer # 降级策略配置 隔离
+  tracing: # zipkin 调用链追踪
+    collector:
+      address: http://zipkin.servicecomb.io:9411
+  isolation: # 降级策略配置 隔离
+    Provider:
+      timeout:
+        enabled: true
+      timeoutInMilliseconds: 30000
+    Consumer:
+      timeout:
+        enabled: true
+      timeoutInMilliseconds: 30000
+  circuitBreaker:
+    Provider:
+      enabled: true
+      sleepWindowInMilliseconds: 15000
+      requestVolumeThreshold: 20
+    Consumer:
+      enabled: true
+      sleepWindowInMilliseconds: 15000
+      requestVolumeThreshold: 20
+  fallback:
+    Provider:
+      enabled: true
+    Consumer:
+      enabled: true
+  fallbackpolicy:
+    Provider:
+      policy: throwexception
+    Consumer:
+      policy: throwexception
+
+  flowcontrol: # 流控
+    Provider:
+      qps:
+        enabled: true
+        limit: # 每秒钟允许的请求数 servicecomb.flowcontrol.Provider.qps.limit.[ServiceName].[Schema].[operation]
+          HelloServiceComb:
+            hello: 1000
+        global:
+          limit: 1000 # provider接受请求流量的全局配置 没有具体的流控配置时，此配置生效
+  rest:
+    address: 0.0.0.0:8091
+  service:
+    registry:
+      address: http://172.18.10.18:30100
+      autodiscovery: false
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    connectionInitSqls: "SET NAMES utf8mb4"
+    url: "jdbc:mysql://172.18.10.18:32308/servicecomb_demo?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=TRUE"
+    username: root
+    password: 123456
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    connection:
+      Charset: utf8mb4
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    database: mysql
+
+  redis:
+    host: 172.18.10.18
+    port: 30079
+
+  messages:
+    basename: i18n/messages
+    cache-seconds: 3600
+    encoding: UTF-8
+
+logging:
+  config: classpath:logback-spring.xml

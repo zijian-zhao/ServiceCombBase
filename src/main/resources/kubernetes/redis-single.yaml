@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-single-svc
+  labels:
+    name: redis-single-svc
+spec:
+  type: NodePort
+  ports:
+    - port: 6379
+      protocol: TCP
+      targetPort: 6379
+      name: http
+      nodePort: 30079
+  selector:
+    name: redis-single-pod
+
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redis-single-rc
+  labels:
+    name: redis-single-rc
+spec:
+  replicas: 1
+  selector:
+    name: redis-single-pod
+  template:
+    metadata:
+      labels:
+        name: redis-single-pod
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
